@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+
+<html lang="zh-cn" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>测试</title>
+    <style>
+        .RichHighLight
+        {
+            display: block;
+            overflow-x: auto;
+            padding: 0.5em;
+            background: white;
+            color: black;
+        }
+        .RichHighLight_error
+        {
+            background-color: #ff2200;
+            color: #ffffff;
+        }
+        .RichHighLight_hexNumber,
+        .RichHighLight_number
+        {
+            color: #752100;
+        }
+        .RichHighLight_symbol,
+        .RichHighLight_maySymbol,
+        .RichHighLight_ident
+        {
+            color: #000000;
+        }
+        .RichHighLight_comment_H
+        {
+            color: #808080;
+        }
+        .RichHighLight_comment_mul,
+        .RichHighLight_comment_single
+        {
+            color: #008000;
+        }
+        .RichHighLight_comment_HTML_H
+        {
+            color: #808080;
+        }
+        .RichHighLight_comment_HTML_mul,
+        .RichHighLight_comment_HTML_single
+        {
+            color:#21a657;
+        }
+        .RichHighLight_char,
+        .RichHighLight_string
+        {
+            color: #a31515;
+        }
+        .RichHighLight_keyword_1
+        {
+            color: #0000ff;
+        }
+        .RichHighLight_keyword_2
+        {
+            color: #2b91af;
+        }
+        .RichHighLight_keyword_3
+        {
+            color: #4b5cc4;
+        }
+    </style>
+</head>
+<body>
+    <pre>
+<code id="testCode" class="RichHighLight">#include &lt;iostream&gt;
+#define  BUFF2D(buff, i, j, n)     ((buff) + ((i) * (n)) + (j))
+#define  REAL_EPSILON              1e-6
+typedef float  _real;
+/*!
+[img] [TestImage.png]
+*/
+int main()
+{
+    int      n, i, j, k;
+    _real    bas, q, d, *matrix;
+    printf(&quot;输入阶数: &quot;);
+    std::cin &gt;&gt; n;
+    matrix = (_real*)malloc(n * n *sizeof(_real));
+    for (i = 0; i &lt; n; i++)
+        for (j = 0; j &lt; n; j++)
+            std::cin &gt;&gt; *BUFF2D(matrix, i, j, n);
+    d = *matrix;                                        // d = 该矩阵的第一行, 第一列的元素
+    for (i = 1; i &lt; n; i++)                             // 把输入矩阵化成上三角矩阵, 开始划每一列
+    {
+        bas = *BUFF2D(matrix, i - 1, i - 1, n);         // 减去的行的列首的元素
+        if (fabs(bas) &gt; REAL_EPSILON)                   // 只划掉当前列不为0的行
+            for (j = i; j &lt; n; j++)
+            {
+                q = *BUFF2D(matrix, j, i - 1, n) / bas; // 下一行, 正在进行运算的列首的元素, 然后让matrix[j][i - 1]-q*bas=0
+                for (k = i - 1; k &lt; n; k++)             // 遍历运算该行: r(j) - qr(i - 1)
+                    *BUFF2D(matrix, j, k, n) -= q * *BUFF2D(matrix, i - 1, k, n);
+            }
+        d *= *BUFF2D(matrix, i, i, n);                  // 对角线相乘
+    }
+    free(matrix);
+    printf(&quot;det(A) = %f\n&quot;, d);
+    system(&quot;pause&quot;);
+    return 0;
+}         
+</code>
+    </pre>
+    <script src="RichHighLight.js"></script>
+    <script>
+        var mykeywords =                                // 喜欢怎么定义随意的啦，本身它只负责关键字高亮, 分类的
+        [
+            [
+                "int", "char", "short", "long", "double", "float", "void",
+                "unsigned", "struct", "typedef", "return", "while", "if",
+                "else", "do", "switch", "case", "default", "break", "continue",
+                "for",
+            ],                                          // 这是第一类关键字, CSS样式为: .RichHighLight_keyword_1
+            [
+                "_real", "_imag", "COMPLEX", "HWND", "HDC"
+            ],                                          // 这是第二类关键字, CSS样式为: .RichHighLight_keyword_2
+            [
+                "sizeof",  "printf", "system", "scanf", "fabs", "sin", "cos", "tan",
+                "std", "cin", "cout", "endl", "malloc", "alloca", "free"
+            ]                                           // 这是第三类...可以无限下去
+        ];
+
+        var obj = document.getElementById("testCode");
+        var str = obj.innerHTML;
+        HighlightString(str, mykeywords, obj);
+    </script>
+</body>
+</html>

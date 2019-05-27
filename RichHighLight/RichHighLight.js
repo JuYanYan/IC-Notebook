@@ -1,5 +1,5 @@
 ﻿
-var stateTable = // 根据编译原理做的有限自动机
+var stateTable =        // 状态转移表
 [
     /*                   0    1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29|-1是退出 */
     /*  +, -        */ [ 25, -1, -1, -1, -1, -1, -1, -1,  9, -1, 10, -1, 12, -1, 29, -1, -1, 17, 19, 19, 19, -1, 22, 22, -1, -1, 28, 27, 28, 29],
@@ -23,13 +23,7 @@ var highlightClassName = // 设计一些高亮类型以便后续不同的着色�
 [
     "error", "hexNumber", "number", "symbol", "maySymbol", "comment_H",
     "comment_single", "comment_mul", "comment_HTML_H", "comment_HTML_single",
-    "comment_HTML_mul", "ident",  "char",  "string",  "keyword1",
-];
-var keywords_c =         // 预设常见的C语言关键字
-[
-    "if", "else", "while", "void", "return", "continue", "break", "static",
-    "extern", "unsigned", "signed", "char", "short", "int", "long", "float",
-    "double", "const",
+    "comment_HTML_mul", "ident",  "char",  "string",  "keyword",                    // 注意, 输出的样式为: keyword_1, keyword_2....按照关键字表来定义
 ];
 /* 返回字符标记
   0        1           2           3           4           5            6          7
@@ -46,7 +40,7 @@ function getCharType(c){
     else if(c == "e" || c == "E")   return 5;
     else if(c == ".")               return 6;
     else if(c == "!")               return 7;
-    else if(c == "\"")              return 8;
+    else if(c == '"')               return 8;
     else if(c == "'")               return 9;
     else if(c == "_" || (c >= "g" && c <= "z") || (c >= "G" && c <= "Z"))   return 10;
     else if(c >= "1" && c <= "9")   return 11;
@@ -81,6 +75,16 @@ function stringType(str){
     return { "str": strGet, "state": state };
 }
 /*
+ 返回高亮的类型
+*/
+function getHighlightClassName(htyp)
+{
+    if(htyp < 14)
+        return highlightClassName[htyp];
+    htyp -= 13;                                     // 得到对应的高亮id, 14是1, 因此减去13
+    return highlightClassName[14] + "_" + htyp;     // 构建CSS样式类名称return
+}
+/*
  主函数: 分析整个输入对象(转为字符串处理), 输出相应的HTML
 */
 function HighlightString(str, keylist, obj){
@@ -100,7 +104,7 @@ function HighlightString(str, keylist, obj){
         if(highType != 8 && highType != 9 && highType != 10){
                                                     // 除了指定的富文本标识符("#!", "//!", "/*!")之外的内容都作为HTML
             rStr = HTMLEncode(rStr);                // 转义内容
-            obj.innerHTML += '<span class="RichHighLight_' + highlightClassName[highType] + '">' + rStr + '</span>';
+            obj.innerHTML += '<span class="RichHighLight_' + getHighlightClassName(highType) + '">' + rStr + '</span>';
             rStr = "";
         }
         else{                                       // 处理富文本
@@ -135,10 +139,10 @@ function HighlightString(str, keylist, obj){
   8                     9               10                 11
  #!内容                 //!内容         /*!内容            标识符
   12                    13              14
-  '',字符               "" 字符串       关键字1
+  '',字符               "" 字符串       关键字1  ... 往后自行导出关键字n
 */
-function getStringHighlightType(state, str, keylist_1){
-    var typ = 0;
+function getStringHighlightType(state, str, keylist){
+    var typ = 0, i;
     switch(state){
     case 3:  typ = 1;  break;                       // [a~f],[A~F],[0~9]    
     case 1:                                         // 0
@@ -154,11 +158,16 @@ function getStringHighlightType(state, str, keylist_1){
     case 27: typ = 8;  break;                       // [!\n],!                
     case 17: typ = 9;  break;                       // [!\n],!                            
     case 24: typ = 10; break;                       // /                        
-    case 15:                                        // ident,[![0~9]ident]                    
-        if( keylist_1.indexOf(str) > -1 )           // 判断str是不是keylist里指定的关键词
-            typ = 14;
-        else
-            typ = 11; 
+    case 15:                                        // ident,[![0~9]ident]
+        for(i = 0; i < keylist.length; i++)         // length 是二维数组的行数
+        {
+            if(keylist[i].indexOf(str) > -1 )       // 判断第n个关键字表的情况
+            {
+                typ = 14 + i;                       // 添加关键字识别id
+                return typ;                         // 识别成功!
+            }
+        }
+        typ = 11;
         break;
     case 13: typ = 12; break;                       // '
     case 11: typ = 13; break;                       // "
@@ -172,7 +181,7 @@ function HTMLEncode(str){
     s     = str.replace(/&/g, "&amp;");
     s     = s.replace(/</g, "&lt;");
     s     = s.replace(/>/g, "&gt;");
-    s     = s.replace(/ /g, "&nbsp;");
+    //s     = s.replace(/ /g, "&nbsp;");            // 换成nbsp总是把样式变得很愚蠢...因为它们有一整个字符大
     s     = s.replace(/\'/g, "&#39;");
     s     = s.replace(/\"/g, "&quot;");
     return s;
