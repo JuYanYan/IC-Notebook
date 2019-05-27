@@ -167,7 +167,7 @@ function getStringHighlightType(state, str, keylist_1){
 }
 // HTML转义
 function HTMLEncode(str){
-    if (str.length === 0) return "";                // 空字符串就没必要处理了
+    if (str.length == 0) return "";                // 空字符串就没必要处理了
     var s = "";
     s     = str.replace(/&/g, "&amp;");
     s     = s.replace(/</g, "&lt;");
@@ -179,7 +179,7 @@ function HTMLEncode(str){
 }
 // HTML反转义
 function htmlRestore(str){
-    if (str.length === 0) return "";                        
+    if (str.length == 0) return "";                        
     var s = "";
     s     = str.replace(/&amp;/g, "&");
     s     = s.replace(/&lt;/g, "<");
